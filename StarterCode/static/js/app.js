@@ -5,9 +5,6 @@ d3.json("./samples.json").then(function(data) {
     names = data.names;
     samples = data.samples;
     metadata = data.metadata;
-    console.log(names);
-    console.log(samples);
-    console.log(metadata);
     // data.names.forEach(function(d) {
     //     names.push(d);
     // });
@@ -58,7 +55,67 @@ function plotBarPatient(patientInfo) {
 }
 
 function plotBubblePatient(patientInfo) {
-    var 
+    const xValues = patientInfo[0].otu_ids;
+    const yValues = patientInfo[0].sample_values;
+    const markerSizes = patientInfo[0].sample_values;
+    const markerColors = xValues;
+    const textValues = patientInfo[0].otu_labels;
+    var trace = {
+        mode: "markers",
+        marker: {
+            size: markerSizes,
+            color: markerColors
+        },
+        x: xValues,
+        y: yValues,
+        text: textValues
+    };
+
+    var layout = {
+        title: "temp title",
+        showlegend: false,
+    };
+    
+    Plotly.newPlot("bubble", [trace], layout);
+}
+
+function pullDemographicInfo(patientInfo) {
+    var stuff = [];
+    for (var key in patientInfo[1]) {
+        var newstuff = [];
+        newstuff.push(key);
+        newstuff.push(patientInfo[1][key]);
+        stuff.push(newstuff.join(": "));
+    };
+    var clearTable = [];
+    d3.select("#striped_table_body").selectAll("tr")
+        .data(clearTable)
+        .exit()
+        .remove();
+    d3.select("#striped_table_body").selectAll("tr")
+        .data(stuff)
+        .enter()
+        .append("tr")
+        .text(function(d) {return d;});
+}
+
+function installGauge(patientInfo) {
+    var data = [
+        {
+            domain: { x: [0, 1], y: [0, 1] },
+            value: patientInfo[1].wfreq,
+            title: { text: "Scrubbing Frequency" },
+            type: "indicator",
+            mode: "gauge+number",
+        }
+    ];
+    
+    var layout = { 
+        width: 600, 
+        height: 500, 
+        margin: { t: 0, b: 0 }
+    };
+    Plotly.newPlot('gauge', data, layout);
 }
 
 function optionChanged(patientName) {
@@ -67,4 +124,6 @@ function optionChanged(patientName) {
     patientData.push(metadata.find(patient => patient.id === parseInt(patientName)));
     plotBarPatient(patientData);
     plotBubblePatient(patientData);
+    pullDemographicInfo(patientData);
+    installGauge(patientData);
 }
